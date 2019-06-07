@@ -23,6 +23,8 @@
 #include <linux/input.h>
 
 
+#include <linux/pm_qos.h>
+
 #include "nt36xxx_mem_map.h"
 
 #define PINCTRL_STATE_ACTIVE		"pmx_ts_active"
@@ -156,6 +158,7 @@ struct nvt_ts_data {
 	struct completion dev_pm_suspend_completion;
 	struct work_struct resume_work;
 	struct workqueue_struct *event_wq;
+	struct pm_qos_request pm_qos_req;
 #ifdef NVT_TOUCH_COUNT_DUMP
 	struct class *nvt_tp_class;
 	struct device *nvt_touch_dev;

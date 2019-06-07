@@ -2477,7 +2477,9 @@ static irqreturn_t synaptics_rmi4_irq(int irq, void *data)
 	if (IRQ_HANDLED == synaptics_filter_interrupt(data))
 		return IRQ_HANDLED;
 
+	pm_qos_update_request(&rmi4_data->pm_qos_req, 100);
 	synaptics_rmi4_sensor_report(rmi4_data, true);
+	pm_qos_update_request(&rmi4_data->pm_qos_req, PM_QOS_DEFAULT_VALUE);
 
 exit:
 	return IRQ_HANDLED;
@@ -5487,6 +5489,9 @@ static int synaptics_rmi4_probe(struct platform_device *pdev)
 		exp_data.initialized = true;
 	}
 
+	pm_qos_add_request(&rmi4_data->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
+
 	rmi4_data->irq = gpio_to_irq(bdata->irq_gpio);
 
 	retval = synaptics_rmi4_irq_enable(rmi4_data, true, false);
@@ -5664,6 +5669,8 @@ err_virtual_buttons:
 	synaptics_rmi4_irq_enable(rmi4_data, false, false);
 
 err_enable_irq:
+	pm_qos_remove_request(&rmi4_data->pm_qos_req);
+
 #ifdef CONFIG_DRM
 	drm_unregister_client(&rmi4_data->drm_notifier);
 #endif
@@ -5762,6 +5769,7 @@ static int synaptics_rmi4_remove(struct platform_device *pdev)
 	}
 
 	synaptics_rmi4_irq_enable(rmi4_data, false, false);
+	pm_qos_remove_request(&rmi4_data->pm_qos_req);
 
 #ifdef CONFIG_DRM
 	drm_unregister_client(&rmi4_data->drm_notifier);

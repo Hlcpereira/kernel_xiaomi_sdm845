@@ -4115,6 +4115,7 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 			}
 		}
 	}
+	pm_qos_update_request(&info->pm_qos_req, 100);
 	input_sync(info->input_dev);
 	info->irq_status = false;
 	if (!info->touch_id)
@@ -4125,6 +4126,8 @@ static irqreturn_t fts_event_handler(int irq, void *ts_info)
 	else
 		logError(1, "%s: haven't complete init wait_queue", tag);
 #endif
+	pm_qos_update_request(&info->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+
 	return IRQ_HANDLED;
 }
 
@@ -6133,6 +6136,10 @@ static int fts_probe(struct spi_device *client)
 	}
 	INIT_WORK(&info->resume_work, fts_resume_work);
 	INIT_WORK(&info->suspend_work, fts_suspend_work);
+
+	pm_qos_add_request(&info->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
+
 	init_completion(&info->tp_reset_completion);
 	logError(0, "%s SET Input Device Property: \n", tag);
 	info->dev = &info->client->dev;
@@ -6441,6 +6448,7 @@ static int fts_probe(struct spi_device *client)
 	return OK;
 
 ProbeErrorExit_8:
+    pm_qos_remove_request(&info->pm_qos_req);
     device_destroy(info->fts_tp_class, 0x49);
     class_destroy(info->fts_tp_class);
     info->fts_tp_class = NULL;
@@ -6525,6 +6533,7 @@ static int fts_remove(struct spi_device *client)
 	fts_enable_reg(info, false);
 	fts_get_reg(info, false);
 	fts_info = NULL;
+	pm_qos_remove_request(&info->pm_qos_req);
 #ifdef CONFIG_SECURE_TOUCH
 	fts_secure_remove(info);
 #endif

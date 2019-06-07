@@ -66,6 +66,7 @@
 #include <linux/unistd.h>
 #include <linux/ioctl.h>
 #include <linux/vmalloc.h>
+#include <linux/pm_qos.h>
 #include "focaltech_common.h"
 #include <linux/firmware.h>
 #include <linux/power_supply.h>
@@ -211,6 +212,7 @@ struct fts_ts_data {
 	bool gamemode_enabled;
 #endif
 
+	struct pm_qos_request pm_qos_req;
 };
 
 struct fts_mode_switch {
