@@ -413,7 +413,7 @@ static struct fg_alg_flag pmi8998_v2_alg_flags[] = {
 	},
 };
 
-static int fg_gen3_debug_mask = FG_IRQ | FG_STATUS;
+static int fg_gen3_debug_mask;
 module_param_named(
 	debug_mask, fg_gen3_debug_mask, int, 0600
 );
@@ -810,12 +810,13 @@ static int fg_get_msoc(struct fg_chip *chip, int *msoc)
 		*msoc = 100;
 	else if (*msoc == 0)
 		*msoc = 0;
-	else if (*msoc >= FULL_SOC_REPORT_THR - 4 && *msoc <= FULL_SOC_REPORT_THR - 3 &&
-			chip->report_full)
+	else if (*msoc >= FULL_SOC_REPORT_THR - 4
+			&& *msoc <= FULL_SOC_REPORT_THR - 3 && chip->report_full) {
 		*msoc = DIV_ROUND_CLOSEST(*msoc * FULL_CAPACITY, FULL_SOC_RAW);
-	else
+	} else {
 		*msoc = DIV_ROUND_CLOSEST((*msoc - 1) * (FULL_CAPACITY - 2),
 				FULL_SOC_RAW - 2) + 1;
+	}
 	return 0;
 }
 
